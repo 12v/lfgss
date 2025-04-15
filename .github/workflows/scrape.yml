@@ -2,11 +2,14 @@ name: Run Scrape Script
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/5 * * * *" # Run every 5 minutes
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
+    concurrency:
+      group: scrape-script
 
     steps:
     - name: Checkout repository
@@ -20,7 +23,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests beautifulsoup4
+        pip install -r requirements.txt # Use requirements.txt for dependencies
 
     - name: Run scrape script
       run: python scrape.py
@@ -29,6 +32,6 @@ jobs:
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        git add -f data.csv
+        git add -f data.csv # Force tracking of data.csv even if in .gitignore
         git commit -m "Update data.csv with new items" || echo "No changes to commit"
         git push
