@@ -23,8 +23,15 @@ urls = [
 ]
 
 for url in urls:
-    response = requests.get(url)
-    response.raise_for_status()
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an error for HTTP status codes >= 400
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTPError: {e}")
+        print(f"Status Code: {response.status_code}")
+        print(f"Response Headers: {response.headers}")
+        print(f"Response Body: {response.text}")
+        break
 
     soup = BeautifulSoup(response.text, "html.parser")
 
