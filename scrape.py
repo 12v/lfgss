@@ -31,7 +31,7 @@ for url in urls:
         print(f"Status Code: {response.status_code}")
         print(f"Response Headers: {response.headers}")
         print(f"Response Body: {response.text}")
-        break
+        raise
 
     soup = BeautifulSoup(response.text, "html.parser")
 
