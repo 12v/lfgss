@@ -1,5 +1,4 @@
 import requests
-from bs4 import BeautifulSoup
 import csv
 import os
 
@@ -34,25 +33,22 @@ for url in urls:
         print(f"HTTPError: {e}")
         raise
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    json = response.json()
+    json_data = json.get("data", {})
+    json_items = json_data.get("items", [])
+    json_items_items = json_items.get("items", [])
 
-    list_items = soup.find_all("li", class_="list-collection-row")
-
-    for item in list_items:
-        item_id = item.get("id", "").replace("microcosm", "")
+    for item in json_items_items:
+        item = item.get("item", {})
+        item_id = item.get("id", "")
+        item_title = item.get("title", "")
 
         if item_id not in existing_ids:
-            title_tag = item.find("h3", class_="cell-title")
-            title = title_tag.get_text(strip=True)
-
-            link_tag = title_tag.find("a", itemprop="url")
-            item_url = f"https://www.lfgss.com{link_tag['href']}"
-
-            new_data.append({"ID": item_id, "Title": title, "URL": item_url})
+            new_data.append({"ID": item_id, "Title": item_title})
 
 # Write new data to the CSV file
 with open(csv_file_path, mode="a", newline="", encoding="utf-8") as csvfile:
-    fieldnames = ["ID", "Title", "URL"]
+    fieldnames = ["ID", "Title"]
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
     # Write header if the file is empty
