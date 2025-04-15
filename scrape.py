@@ -43,7 +43,7 @@ for url in urls:
         item_id = item.get("id", "")
         item_title = item.get("title", "")
 
-        if item_id not in existing_ids:
+        if str(item_id) not in existing_ids:
             new_data.append({"ID": item_id, "Title": item_title})
 
 # Write new data to the CSV file
