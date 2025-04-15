@@ -18,8 +18,8 @@ if os.path.exists(csv_file_path):
 new_data = []
 
 urls = [
-    "https://www.lfgss.com/microcosms/548/",
-    "https://www.lfgss.com/microcosms/549/",
+    "https://lfgss-1.12v.workers.dev/",
+    "https://lfgss-2.12v.workers.dev/",
 ]
 
 for url in urls:
