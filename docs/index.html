@@ -128,13 +128,20 @@
                 return;
             }
 
+            alert('Subscribing to push notifications...');
+
             const reg = await navigator.serviceWorker.register('sw.js');
+
+            alert('Service Worker registered successfully.');
             const sub = await reg.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: publicKey
             });
 
+            alert('Subscribed to push notifications successfully.');
+
             const subJSON = JSON.stringify(sub, null, 2);
+            alert('Copying subscription to clipboard...');
             await navigator.clipboard.writeText(subJSON);
             alert('Subscription copied to clipboard. Paste into GitHub Secrets.');
 
