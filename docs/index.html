@@ -101,15 +101,22 @@
 
 <body>
     <div class="container">
+        <button id="refresh">Refresh</button>
         <h1>Classifieds</h1>
         <div id="entries"></div>
     </div>
 
-    <button id="subscribe">Subscribe & Copy Token</button>
+    <button id="subscribe" style="display: none;">Subscribe & Copy Token</button>
 
     <script>
         const publicKey = 'BDNExjVuXY2ikVcqGr_SDvj4lqpGeCJol-L4GIFCW-9d0GDZti2dhpJnXJMn-3G8sVIo8hUbpn0LAL9-YgOUF7I';
         const subscribeBtn = document.getElementById('subscribe');
+        const refreshBtn = document.getElementById('refresh');
+
+        // Function to refresh the page
+        refreshBtn.addEventListener('click', () => {
+            location.reload();
+        });
 
         async function checkSubscription() {
             if (!('serviceWorker' in navigator)) return;
@@ -117,7 +124,7 @@
             const reg = await navigator.serviceWorker.ready;
             const sub = await reg.pushManager.getSubscription();
 
-            // Show button only if not subscribed
+            // Show subscribe button only if not subscribed
             subscribeBtn.style.display = sub ? 'none' : 'block';
         }
 
