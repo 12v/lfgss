@@ -1,7 +1,7 @@
 {
     "name": "Classifieds",
     "short_name": "Classifieds",
-    "start_url": "/index.html",
+    "start_url": "https://12v.github.io/lfgss/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#000000",
