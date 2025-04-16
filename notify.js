@@ -20,8 +20,8 @@ webpush.setVapidDetails(
 const subscription = JSON.parse(process.env.PUSH_SUBSCRIPTION);
 
 const payload = JSON.stringify({
-    title: '🎉 GitHub Action',
-    body: 'Main branch just got a new push!'
+    title: 'New post',
+    body: 'New post in classifieds'
 });
 
 webpush.sendNotification(subscription, payload)

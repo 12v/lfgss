@@ -25,26 +25,34 @@ jobs:
       with:
         node-version: 18
 
-    - name: Install web-push
-      run: npm install web-push
-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt # Use requirements.txt for dependencies
+        pip install -r requirements.txt
+        npm install web-push
 
     - name: Run scrape script
       run: python scrape.py
 
+    - name: Check for changes in data.csv
+      run: |
+        if git diff --name-only | grep -q "data.csv"; then
+          echo "data_changed=true" >> $GITHUB_ENV
+        else
+          echo "data_changed=false" >> $GITHUB_ENV
+        fi
+
     - name: Commit and push changes
+      if: env.data_changed == 'true'
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        git add -f data.csv # Force tracking of data.csv even if in .gitignore
+        git add data.csv
         git commit -m "Update data.csv with new items" || echo "No changes to commit"
         git push
 
     - name: Send Push Notification
+      if: env.data_changed == 'true'
       run: node notify.js
       env:
         VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
