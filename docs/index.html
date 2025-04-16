@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classifieds</title>
+
+    <!-- Standard PWA manifest -->
+    <link rel="manifest" href="site.webmanifest">
+
+    <!-- iOS PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Classifieds">
+
+    <!-- Splash screens (optional, for better UX) -->
+    <!-- iOS splash screens are device-specific, you can generate them using tools like PWA Asset Generator -->
+
+    <!-- Theme color for Safari top bar -->
+    <meta name="theme-color" content="#ffffff">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 10px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .entry:last-child {
+            border-bottom: none;
+        }
+
+        .entry a {
+            text-decoration: none;
+            color: #007BFF;
+        }
+
+        .entry button {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .entry button:hover {
+            background: #e60000;
+        }
+
+        #subscribe {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        #subscribe:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        #subscribe:active {
+            background-color: #003f7f;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Classifieds</h1>
+        <div id="entries"></div>
+    </div>
+
+    <button id="subscribe">Subscribe & Copy Token</button>
+
+    <script>
+        const publicKey = 'BDNExjVuXY2ikVcqGr_SDvj4lqpGeCJol-L4GIFCW-9d0GDZti2dhpJnXJMn-3G8sVIo8hUbpn0LAL9-YgOUF7I';
+        const subscribeBtn = document.getElementById('subscribe');
+
+        async function checkSubscription() {
+            if (!('serviceWorker' in navigator)) return;
+
+            const reg = await navigator.serviceWorker.ready;
+            const sub = await reg.pushManager.getSubscription();
+
+            // Show button only if not subscribed
+            subscribeBtn.style.display = sub ? 'none' : 'block';
+        }
+
+        async function subscribe() {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                alert('Permission not granted!');
+                return;
+            }
+
+            const reg = await navigator.serviceWorker.register('sw.js');
+            const sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: publicKey
+            });
+
+            const subJSON = JSON.stringify(sub, null, 2);
+            await navigator.clipboard.writeText(subJSON);
+            alert('Subscription copied to clipboard. Paste into GitHub Secrets.');
+
+            console.log('Subscription:', subJSON);
+            subscribeBtn.style.display = 'none';
+        }
+
+        subscribeBtn.addEventListener('click', subscribe);
+        window.addEventListener('load', checkSubscription);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('serviceworker.js')
+                .then(() => console.log('Service Worker registered successfully.'))
+                .catch(error => console.error('Service Worker registration failed:', error));
+        }
+
+        // Function to decode HTML entities
+        function decodeHtmlEntities(text) {
+            const parser = new DOMParser();
+            const decodedString = parser.parseFromString(text, 'text/html').body.textContent || '';
+            return decodedString;
+        }
+
+        // Function to parse CSV manually
+        function parseCSV(csvText) {
+            const rows = [];
+            const lines = csvText.split('\n');
+
+            for (let i = 1; i < lines.length; i++) { // Skip the header row
+                const line = lines[i].trim();
+                if (!line) continue; // Skip empty lines
+
+                const fields = [];
+                let currentField = '';
+                let insideQuotes = false;
+
+                for (let char of line) {
+                    if (char === '"' && !insideQuotes) {
+                        insideQuotes = true; // Start of a quoted field
+                    } else if (char === '"' && insideQuotes) {
+                        insideQuotes = false; // End of a quoted field
+                    } else if (char === ',' && !insideQuotes) {
+                        fields.push(currentField.trim());
+                        currentField = ''; // Start a new field
+                    } else {
+                        currentField += char; // Append character to the current field
+                    }
+                }
+                fields.push(currentField.trim()); // Add the last field
+
+                if (fields.length === 2) { // Ensure the row has exactly two fields (ID and Title)
+                    rows.push({ id: fields[0], title: decodeHtmlEntities(fields[1]) });
+                }
+            }
+
+            return rows;
+        }
+
+        // Fetch data from the CSV file
+        fetch('https://raw.githubusercontent.com/12v/lfgss/refs/heads/main/data.csv')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(csvText => {
+                const data = parseCSV(csvText); // Parse the CSV text
+
+                // Load hidden IDs from local storage
+                const hiddenIds = new Set(JSON.parse(localStorage.getItem('hiddenIds') || '[]'));
+
+                // Render entries in reverse order
+                const entriesContainer = document.getElementById('entries');
+                data.reverse().forEach(entry => {
+                    if (!hiddenIds.has(entry.id)) {
+                        const entryDiv = document.createElement('div');
+                        entryDiv.className = 'entry';
+
+                        const link = document.createElement('a');
+                        link.href = `https://www.lfgss.com/conversations/${entry.id}/`;
+                        link.textContent = entry.title;
+                        link.target = '_blank';
+
+                        const button = document.createElement('button');
+                        button.textContent = 'Hide';
+                        button.onclick = () => {
+                            hiddenIds.add(entry.id);
+                            localStorage.setItem('hiddenIds', JSON.stringify([...hiddenIds]));
+                            entryDiv.remove();
+                        };
+
+                        entryDiv.appendChild(link);
+                        entryDiv.appendChild(button);
+                        entriesContainer.appendChild(entryDiv);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching or processing the CSV file:', error);
+            });
+    </script>
+</body>
+
+</html>
