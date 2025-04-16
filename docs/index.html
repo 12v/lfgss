@@ -130,6 +130,8 @@
 
             alert('Subscribing to push notifications...');
 
+            const reg = await navigator.serviceWorker.ready;
+
             const sub = await reg.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: publicKey
