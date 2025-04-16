@@ -140,9 +140,12 @@
             alert('Subscribed to push notifications successfully.');
 
             const subJSON = JSON.stringify(sub, null, 2);
-            alert('Copying subscription to clipboard...');
-            await navigator.clipboard.writeText(subJSON);
-            alert('Subscription copied to clipboard. Paste into GitHub Secrets.');
+            alert('Adding subscription to page...');
+
+            const textarea = document.createElement('textarea');
+            textarea.value = subJSON;
+            document.body.appendChild(textarea);
+            alert('Subscription added to page. Paste into GitHub Secrets.');
 
             console.log('Subscription:', subJSON);
             subscribeBtn.style.display = 'none';
